@@ -28,8 +28,8 @@ library(readxl)
 ```
 
 
-I think the motivation for using web data could be highlighted a bit more - eventually, all data on slide 4 could also come from surveys. So for the GTrends data, would the argument be that this is accessible over time (as opposed to a single point in time). If yes, maybe this aspect could be incorporated in your models (e.g. change in mask wearing search interest up to the election).
-
+"I think the motivation for using web data could be highlighted a bit more - eventually, all data on slide 4 could also come from surveys. So for the GTrends data, would the argument be that this is accessible over time (as opposed to a single point in time). If yes, maybe this aspect could be incorporated in your models (e.g. change in mask wearing search interest up to the election)."
+  
 
 
 ```{r}
