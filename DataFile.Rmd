@@ -1,0 +1,53 @@
+---
+title: "Data File"
+author: "Mark Nathin and Anqi Liu"
+date: "November 14, 2021"
+output: 
+  pdf_document:
+    fig_height: 3
+    fig_width: 5
+  html_document:
+    fig_height: 3
+    fig_width: 5
+  word_document:
+    fig_height: 3
+    fig_width: 5
+---
+
+```{r, setup, include=FALSE}
+require(mosaic)   # Load additional packages here 
+knitr::opts_chunk$set(
+  tidy=FALSE,     # display code as typed
+  size="small")   # slightly smaller font for code
+```
+
+```{r}
+library(readr)
+library(dplyr)
+library(readxl)
+```
+
+## Mask-Usage Data 
+
+```{r}
+mask_use_by_county <- read_csv("~/Desktop/mask-use-by-county.csv")
+mask_use <- mask_use_by_county
+head(mask_use)
+```
+
+## Election Results Data 
+
+```{r}
+X2020_US_County_Level_Presidential_Results <- read_csv("~/Desktop/2020_US_County_Level_Presidential_Results.csv")
+Election <- X2020_US_County_Level_Presidential_Results
+head(Election)
+```
+
+
+  
+
+
+
+
+
+
