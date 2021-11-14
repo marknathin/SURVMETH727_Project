@@ -27,7 +27,33 @@ library(dplyr)
 library(readxl)
 ```
 
+
+I think the motivation for using web data could be highlighted a bit more - eventually, all data on slide 4 could also come from surveys. So for the GTrends data, would the argument be that this is accessible over time (as opposed to a single point in time). If yes, maybe this aspect could be incorporated in your models (e.g. change in mask wearing search interest up to the election).
+
+
+
+```{r}
+library(tidycensus)
+acs5 <- load_variables(year = 2017, dataset = "acs5", cache = TRUE)
+```
+
+```{r}
+race <- get_acs(geography = "county",
+variables = c(RaceTotal = "B02001_001",
+White = "B02001_002",
+Black = "B02001_003",
+AmericanIndianAlaskaNative = "B02001_004",
+Asian = "B02001_005",
+NativeHawaiian = "B02001_006",
+OtherRace = "B02001_007",
+TwoRaces = "B02001_008"),
+survey = "acs5")
+```
+
+
 ## Mask-Usage Data 
+
+First we will read-in the NY Times Mask-Usage data from July 2020. 
 
 ```{r}
 mask_use_by_county <- read_csv("~/Desktop/mask-use-by-county.csv")
@@ -37,14 +63,113 @@ head(mask_use)
 
 ## Election Results Data 
 
+Next we will read in the county level results of the 2020 Presidential Election. 
+
 ```{r}
 X2020_US_County_Level_Presidential_Results <- read_csv("~/Desktop/2020_US_County_Level_Presidential_Results.csv")
 Election <- X2020_US_County_Level_Presidential_Results
+Election <- rename(Election, COUNTYFP = county_fips)
 head(Election)
 ```
 
+## Income and other County Data 
 
-  
+```{r}
+library(readxl)
+Unemployment <- read_excel("~/Desktop/Unemployment.xlsx")
+```
+
+```{r}
+county_data <- read_csv("~/Downloads/county_complete.csv")
+```
+
+```{r}
+Education <- read_excel("~/Desktop/Education.xls")
+```
+
+
+## Joining Data
+
+Mask usage data was not collected for any counties in Alaska. Therefore, Alaska will not be included in this analysis. 
+
+### Mask and Election Data Joining
+
+```{r}
+Left <- left_join(Election, mask_use, by = "COUNTYFP")
+Combined <- inner_join(Election, mask_use, by = "COUNTYFP")
+```
+
+
+## Preliminary Analysis
+
+Which counties in the United States were most and least likely to report wearing a mask in public during the height of the pandemic?
+
+```{r}
+Combined %>% # Most likely to always wear mask
+  select(state_name, county_name, ALWAYS) %>%
+  group_by(state_name, county_name, ALWAYS) %>%
+  summarize(High_Masking = n()) %>%
+  arrange(desc(ALWAYS))
+
+Combined %>% # Most likely to never wear mask
+  select(state_name, county_name, NEVER) %>%
+  group_by(state_name, county_name, NEVER) %>%
+  summarize(Low_Masking = n()) %>%
+  arrange(desc(NEVER))
+```
+
+--> Could create new variables: Combining Never/Rarely and Freuently/Always into one variable.
+
+
+What is the link between mask usage and 2020 Presidential election votes: how well can one predict the other?  
+
+### Predict Mask-Wearing with Percentage Vote for Democrats/Republican
+
+```{r}
+mod1 <- lm(ALWAYS ~ per_dem + per_gop, data = Combined)
+summary(mod1)
+faraway::vif(mod1) # Correlated predictors - take one out
+```
+
+```{r}
+mod2 <- lm(NEVER ~ per_dem + per_gop, data = Combined)
+summary(mod2)
+```
+
+### Predict Percentage Vote for Democrats/Republican with Mask Wearing Tendencies
+
+```{r}
+mod3 <- lm(per_dem ~ ALWAYS + NEVER, data = Combined)
+summary(mod3)
+```
+
+```{r}
+mod4 <- lm(per_gop ~ ALWAYS + NEVER, data = Combined)
+summary(mod4)
+faraway::vif(mod4) # Predictors not correlated 
+```
+
+Always wearing a mask is highly associated with a high vote percentage for democratic candidates. Never wearing a mask is associated with voting republican but the association is less strong (hypothesis: perhaps because a lot of people were wearing masks overall- perhaps fewer Republicans reported wearing a mask than Democrats but the majority of Republicans still wore masks)
+
+How much can other variables improve these types of models? 
+
+## Google Trends
+
+```{r}
+
+```
+
+
+--> Use Census API for acquiring additional county level data? 
+
+## References
+
+https://www.ers.usda.gov/data-products/county-level-data-sets/download-data
+
+Mask-wearing data: https://github.com/nytimes/covid-19-data/tree/master/mask-use
+
+Election data: https://github.com/tonmcg/US_County_Level_Election_Results_08-20/blob/master/2020_US_County_Level_Presidential_Results.csv
+
 
 
 
