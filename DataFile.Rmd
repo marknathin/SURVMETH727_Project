@@ -27,11 +27,6 @@ library(dplyr)
 library(readxl)
 ```
 
-
-"I think the motivation for using web data could be highlighted a bit more - eventually, all data on slide 4 could also come from surveys. So for the GTrends data, would the argument be that this is accessible over time (as opposed to a single point in time). If yes, maybe this aspect could be incorporated in your models (e.g. change in mask wearing search interest up to the election)."
-  
-
-
 ```{r}
 library(tidycensus)
 acs5 <- load_variables(year = 2017, dataset = "acs5", cache = TRUE)
@@ -75,16 +70,16 @@ head(Election)
 ## Income and other County Data 
 
 ```{r}
-library(readxl)
-Unemployment <- read_excel("~/Desktop/Unemployment.xlsx")
+#library(readxl)
+#Unemployment <- read_excel("~/Desktop/Unemployment.xlsx")
 ```
 
 ```{r}
-county_data <- read_csv("~/Downloads/county_complete.csv")
+#county_data <- read_csv("~/Downloads/county_complete.csv")
 ```
 
 ```{r}
-Education <- read_excel("~/Desktop/Education.xls")
+#Education <- read_excel("~/Desktop/Education.xls")
 ```
 
 
@@ -99,6 +94,48 @@ Left <- left_join(Election, mask_use, by = "COUNTYFP")
 Combined <- inner_join(Election, mask_use, by = "COUNTYFP")
 ```
 
+```{r}
+uscounties <- read_csv("~/Downloads/simplemaps_uscounties_basicv1.71/uscounties.csv")
+uscounties <- uscounties %>%
+  rename(COUNTYFP = county_fips)
+Combined2 <- inner_join(Combined, uscounties, by = "COUNTYFP")
+```
+
+```{r}
+CombinedClean <- Combined2 %>%
+    select(state_name.x, COUNTYFP, county_name, per_gop, per_dem, per_point_diff, NEVER, RARELY, SOMETIMES, 
+           FREQUENTLY, ALWAYS, lat, lng, population) %>%
+  rename(Percent_Democrat = "per_dem") %>%
+  rename(Percent_Republican = "per_gop") %>%
+  rename(Difference = "per_point_diff") %>%
+  rename(State = "state_name.x") %>%
+  rename(Never = "NEVER") %>%
+  rename(Rarely = "RARELY") %>%
+  rename(Sometimes = "SOMETIMES") %>%
+  rename(Frequently = "FREQUENTLY") %>%
+  rename(Always = "ALWAYS") %>%
+  mutate(Never_Rarely = Never + Rarely) %>%
+  mutate(Frequently_Always = Frequently + Always) %>%
+  mutate(Majority = ifelse(Percent_Democrat > Percent_Republican, "Democrat", "Republican"))
+
+CombinedClean$Percent_Democrat <- round(CombinedClean$Percent_Democrat, digits = 2)
+CombinedClean$Percent_Republican <- round(CombinedClean$Percent_Republican, digits = 2)
+CombinedClean$Difference <- round(CombinedClean$Difference, digits = 2)
+
+head(CombinedClean)
+```
+
+
+```{r}
+ShinyAppDS <- CombinedClean %>% 
+  select(State, county_name, lat, lng, Percent_Republican, Percent_Democrat, Difference, Never, Rarely, 
+         Sometimes, Frequently, Always, Never_Rarely, Frequently_Always, Majority)
+numcounties <- 700
+ShinyAppDS <- ShinyAppDS[sample(1:nrow(ShinyAppDS), numcounties, replace=FALSE),] # Select a random sample of 700 counties
+ShinyAppDS
+
+write_csv(ShinyAppDS, "ShinyAppDS.csv")
+```
 
 ## Preliminary Analysis
 
@@ -118,7 +155,16 @@ Combined %>% # Most likely to never wear mask
   arrange(desc(NEVER))
 ```
 
---> Could create new variables: Combining Never/Rarely and Freuently/Always into one variable.
+
+```{r}
+#ggplot(data = ShinyAppDS, aes(x = Never_Rarely, y = Frequently_Always)) +
+ #     geom_point() +
+  #    labs(x = tools::toTitleCase(str_replace_all(Never_Rarely, "_", " ")),
+   #        y = tools::toTitleCase(str_replace_all(Frequently_Always, "_", " ")))
+
+ #ggplot(data = ShinyAppDS + aes(x = x, y = y)) + 
+  #          geom_point()
+```
 
 
 What is the link between mask usage and 2020 Presidential election votes: how well can one predict the other?  
@@ -135,6 +181,12 @@ faraway::vif(mod1) # Correlated predictors - take one out
 mod2 <- lm(NEVER ~ per_dem + per_gop, data = Combined)
 summary(mod2)
 ```
+
+```{r}
+mod3 <- lm(ALWAYS ~ per_dem, data = Combined)
+summary(mod3)
+```
+
 
 ### Predict Percentage Vote for Democrats/Republican with Mask Wearing Tendencies
 
@@ -153,14 +205,6 @@ Always wearing a mask is highly associated with a high vote percentage for democ
 
 How much can other variables improve these types of models? 
 
-## Google Trends
-
-```{r}
-
-```
-
-
---> Use Census API for acquiring additional county level data? 
 
 ## References
 
