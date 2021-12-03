@@ -180,10 +180,12 @@ faraway::vif(mod1) # Correlated predictors - take one out
 ```{r}
 mod2 <- lm(NEVER ~ per_dem + per_gop, data = Combined)
 summary(mod2)
+modnew <- lm(Never_Rarely ~ Percent_Republican, data = CombinedClean)
+summary(modnew)
 ```
 
 ```{r}
-mod3 <- lm(ALWAYS ~ per_dem, data = Combined)
+mod3 <- lm(Frequently_Always ~ Percent_Democrat, data = CombinedClean)
 summary(mod3)
 ```
 
