@@ -27,25 +27,6 @@ library(dplyr)
 library(readxl)
 ```
 
-```{r}
-library(tidycensus)
-acs5 <- load_variables(year = 2017, dataset = "acs5", cache = TRUE)
-```
-
-```{r}
-race <- get_acs(geography = "county",
-variables = c(RaceTotal = "B02001_001",
-White = "B02001_002",
-Black = "B02001_003",
-AmericanIndianAlaskaNative = "B02001_004",
-Asian = "B02001_005",
-NativeHawaiian = "B02001_006",
-OtherRace = "B02001_007",
-TwoRaces = "B02001_008"),
-survey = "acs5")
-```
-
-
 ## Mask-Usage Data 
 
 First we will read-in the NY Times Mask-Usage data from July 2020. 
@@ -67,19 +48,90 @@ Election <- rename(Election, COUNTYFP = county_fips)
 head(Election)
 ```
 
-## Income and other County Data 
+## Census API Variables
 
 ```{r}
-#library(readxl)
-#Unemployment <- read_excel("~/Desktop/Unemployment.xlsx")
+library(tidycensus)
+acs5 <- load_variables(year = 2017, dataset = "acs5", cache = TRUE)
 ```
 
 ```{r}
-#county_data <- read_csv("~/Downloads/county_complete.csv")
+race <- get_acs(geography = "county",
+variables = c(RaceTotal = "B02001_001",
+White = "B02001_002",
+Black = "B02001_003",
+AmericanIndianAlaskaNative = "B02001_004",
+Asian = "B02001_005",
+NativeHawaiian = "B02001_006",
+OtherRace = "B02001_007",
+TwoRaces = "B02001_008"),
+survey = "acs5")
 ```
 
 ```{r}
-#Education <- read_excel("~/Desktop/Education.xls")
+spRace <- race %>% select(-moe) %>% spread(variable, estimate)
+```
+
+```{r}
+# Standardizing variables by county population
+RaceCleaned <- spRace %>% mutate(White = White/RaceTotal,
+Black = Black/RaceTotal,
+AmericanIndianAlaskaNative = AmericanIndianAlaskaNative/RaceTotal,
+Asian = Asian/RaceTotal,
+NativeHawaiian = NativeHawaiian/RaceTotal,
+TwoRaces = TwoRaces/RaceTotal) %>%
+select(GEOID, NAME, RaceTotal, White, Black, AmericanIndianAlaskaNative,
+Asian, NativeHawaiian, TwoRaces)
+```
+
+```{r}
+EmploymentIncome <- get_acs(geography = "county",
+                      variables = c(OverAge16 = "B23025_001",
+                                    UnemploymentRate = "B23025_005",
+                                    Med_Household_Income = "B19019_001",
+                                    PerCapitaIncome = "B19301_001"),
+                      survey = "acs5")
+```
+
+```{r}
+spEmploymentIncome <- EmploymentIncome %>% select(-moe) %>% spread(variable, estimate)
+```
+
+```{r}
+# Standardizing variables by county population
+EmploymentIncomeCleaned <- spEmploymentIncome %>% mutate(UnemploymentRate = UnemploymentRate/OverAge16) %>%
+select(GEOID, NAME, UnemploymentRate, Med_Household_Income, PerCapitaIncome)
+```
+
+```{r}
+education <- get_acs(geography = "county",
+                     variables = c(TotOver25 = "B07009_001", 
+                                   LessHS = "B07009_002", 
+                                   HSGrad = "B07009_003",
+                                   SomeCollege = "B07009_004", 
+                                   Bachelors = "B07009_005", 
+                                   GradProfDegree = "B07009_006"), survey = "acs5")
+```
+
+```{r}
+spEducation <- education %>% select(-moe) %>% spread(variable, estimate)
+```
+
+```{r}
+EducationCleaned <- spEducation %>% mutate(LessHS = LessHS/TotOver25,
+HSGrad = HSGrad/TotOver25,
+SomeCollege = SomeCollege/TotOver25,
+Bachelors = Bachelors/TotOver25,
+GradProfDegree = GradProfDegree/TotOver25) %>%
+  select(GEOID, NAME, HSGrad, SomeCollege, Bachelors, GradProfDegree)
+```
+
+```{r}
+Join1 <- inner_join(RaceCleaned, EmploymentIncomeCleaned, by = "NAME")
+Join2 <- inner_join(Join1, EducationCleaned, by = "NAME")
+Join2 <- Join2 %>%
+  select(-GEOID.y) %>%
+  rename(COUNTYFP = "GEOID.x")
 ```
 
 
@@ -121,8 +173,18 @@ CombinedClean <- Combined2 %>%
 CombinedClean$Percent_Democrat <- round(CombinedClean$Percent_Democrat, digits = 2)
 CombinedClean$Percent_Republican <- round(CombinedClean$Percent_Republican, digits = 2)
 CombinedClean$Difference <- round(CombinedClean$Difference, digits = 2)
+```
 
-head(CombinedClean)
+```{r}
+CombinedClean <- left_join(CombinedClean, Join2, by = "COUNTYFP")
+```
+
+
+--> ROUND TO TWO DIGITS 
+```{r}
+#CombinedClean$Percent_Democrat <- round(CombinedClean$Percent_Democrat, digits = 2)
+#CombinedClean$Percent_Republican <- round(CombinedClean$Percent_Republican, digits = 2)
+#CombinedClean$Difference <- round(CombinedClean$Difference, digits = 2)
 ```
 
 
@@ -156,56 +218,66 @@ Combined %>% # Most likely to never wear mask
 ```
 
 
-```{r}
-#ggplot(data = ShinyAppDS, aes(x = Never_Rarely, y = Frequently_Always)) +
- #     geom_point() +
-  #    labs(x = tools::toTitleCase(str_replace_all(Never_Rarely, "_", " ")),
-   #        y = tools::toTitleCase(str_replace_all(Frequently_Always, "_", " ")))
+What is the link between mask usage and 2020 Presidential election votes: how well can one predict the other?  
 
- #ggplot(data = ShinyAppDS + aes(x = x, y = y)) + 
-  #          geom_point()
+```{r}
+cor(CombinedClean$Never_Rarely, CombinedClean$Percent_Republican)
+cor(CombinedClean$Frequently_Always, CombinedClean$Percent_Democrat)
+cor(CombinedClean$Frequently_Always, CombinedClean$PerCapitaIncome)
+cor(CombinedClean$Frequently_Always, CombinedClean$Percent_Democrat)
 ```
 
-
-What is the link between mask usage and 2020 Presidential election votes: how well can one predict the other?  
 
 ### Predict Mask-Wearing with Percentage Vote for Democrats/Republican
 
 ```{r}
-mod1 <- lm(ALWAYS ~ per_dem + per_gop, data = Combined)
-summary(mod1)
-faraway::vif(mod1) # Correlated predictors - take one out
+# Simple Linear Regression
+NoMask <- lm(Never_Rarely ~ Percent_Republican, data = CombinedClean)
+summary(NoMask)
 ```
 
 ```{r}
-mod2 <- lm(NEVER ~ per_dem + per_gop, data = Combined)
-summary(mod2)
-modnew <- lm(Never_Rarely ~ Percent_Republican, data = CombinedClean)
-summary(modnew)
+# Simple Linear Regression
+YesMask <- lm(Frequently_Always ~ Percent_Democrat, data = CombinedClean)
+summary(YesMask)
 ```
 
+
+
 ```{r}
-mod3 <- lm(Frequently_Always ~ Percent_Democrat, data = CombinedClean)
-summary(mod3)
+MLRMod <- lm(Frequently_Always ~ Percent_Democrat + White + Asian + Black + PerCapitaIncome + Bachelors, data = CombinedClean)
+summary(MLRMod)
 ```
 
 
 ### Predict Percentage Vote for Democrats/Republican with Mask Wearing Tendencies
 
 ```{r}
-mod3 <- lm(per_dem ~ ALWAYS + NEVER, data = Combined)
-summary(mod3)
+## Simple Linear Regression
+DemocratSupport <- lm(Percent_Democrat ~ Frequently_Always, data = CombinedClean)
+summary(DemocratSupport)
 ```
 
 ```{r}
-mod4 <- lm(per_gop ~ ALWAYS + NEVER, data = Combined)
-summary(mod4)
-faraway::vif(mod4) # Predictors not correlated 
+# Simple Linear Regression
+RepubSupport <- lm(Percent_Republican ~ Never_Rarely, data = CombinedClean)
+summary(RepubSupport)
 ```
 
 Always wearing a mask is highly associated with a high vote percentage for democratic candidates. Never wearing a mask is associated with voting republican but the association is less strong (hypothesis: perhaps because a lot of people were wearing masks overall- perhaps fewer Republicans reported wearing a mask than Democrats but the majority of Republicans still wore masks)
 
-How much can other variables improve these types of models? 
+
+```{r}
+Mult <- lm(Percent_Democrat ~ Frequently_Always + White + Asian + Black + PerCapitaIncome + Bachelors, 
+           data = CombinedClean)
+summary(Mult)
+```
+
+
+
+
+
+
 
 
 ## References
