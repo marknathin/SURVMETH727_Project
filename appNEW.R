@@ -19,28 +19,39 @@ library(leaflet.minicharts)
 
 ShinyAppDS <- read_csv("ShinyAppDS.csv")
 
-ShinyAppDSTable <- ShinyAppDS %>% select(State, county_name, Percent_Democrat, Percent_Republican, 
-                                         Never, Rarely, Sometimes, Frequently, Always)
+CombinedCleanApp <- read_csv("CombinedCleanApp.csv")
+
+ShinyAppDSTable <- CombinedCleanApp %>% select(State, county_name, Percent_Democrat, Percent_Republican, 
+                                         Never, Rarely, Sometimes, Frequently, Always, White, Black, Asian, UnemploymentRate,
+                                         Med_Household_Income, LessHS, HSGrad, Bachelors, GradProfDegree)
 
 codebook <- data.frame(Variable = c("State", "county_name", "lat", "lng", "Percent_Democrat",
                                     "Percent_Republican", "Difference", "Majority", "Never",
                                     "Rarely", "Sometimes", "Frequently",
-                                    "Always", "Never_Rarely", "Frequently_Always"),
+                                    "Always", "Never_Rarely", "Frequently_Always", "White", "Black", "UnemploymentRate",
+                                    "Med_Household_Income", "LessHS", "HSGrad", "Bachelors", "GradProfDegree"),
                        Description = c("State Name", "County Name",
                                        "Latitude coordinate of county",
                                        "Longitude coordinate of county",
-                                       "Percent in county voting for a Democrat in 2020 Presidential election",
-                                       "Percent in county voting for a Republican in 2020 Presidential election",
+                                       "Proportion in county voting for a Democrat in 2020 Presidential election",
+                                       "Proportion in county voting for a Republican in 2020 Presidential election",
                                        "Difference between percent voting for a Democrat vs. Republican in 2020 Election",
                                        "Political party with more votes in county in 2020 Presidential election",
-                                       "Percent reporting never wearing a mask in public",
-                                       "Percent reporting rarely wearing a mask in public",
-                                       "Percent reporting sometimes wearing a mask in public",
-                                       "Percent reporting frequently wearing a mask in public",
-                                       "Percent reporting always wearing a mask in public",
-                                       "Percent reporting never OR rarely wearing a mask in public",
-                                       "Percent reporting frequently OR always wearing a mask in public"),
-                       Notes = c("", "", "", "", "", "", "", "", "", "", "", "", "", "", ""))
+                                       "Proportion reporting never wearing a mask in public",
+                                       "Proportion reporting rarely wearing a mask in public",
+                                       "Proportion reporting sometimes wearing a mask in public",
+                                       "Proportion reporting frequently wearing a mask in public",
+                                       "Proportion reporting always wearing a mask in public",
+                                       "Proportion reporting never OR rarely wearing a mask in public",
+                                       "Proportion reporting frequently OR always wearing a mask in public", 
+                                       "Proportion of the population that is white",
+                                       "Proportion of the population that is black",
+                                       "County Unemployment Rate (as of 2019)",
+                                       "Median Household Income",
+                                       "Proportion of adults without a high school degree",
+                                       "Proportion of adults who are high school graduates",
+                                       "Proportion of adults with a Bachelors degree",
+                                       "Proportion of adults with a Graduate or Professional Degree"))
 
 # Define UI
 ui <- dashboardPage(
@@ -65,6 +76,12 @@ ui <- dashboardPage(
                              
                              p("Explore the relationship between mask wearing tendencies and presidential election votes for
                   counties throughout the USA."),
+                             
+                             br(),
+                             selectInput("Majority", "2020 Election Party Vote", choices = c("All",
+                                                                                               "Democrat" = "Democrat",
+                                                                                               "Republican" = "Republican"),
+                                         selected = "All"),
                              
                          ),
                          
@@ -97,14 +114,18 @@ ui <- dashboardPage(
                      
                      selectInput(inputId = "x", 
                                  label = "x-axis (specify your x variable):",
-                                 choices = c("Percent_Democrat", "Percent_Republican", "Never", "Rarely", "Sometimes", "Frequently", "Always"), 
+                                 choices = c("Percent_Democrat", "Percent_Republican", "Never", "Rarely", "Sometimes", "Frequently", "Always",
+                                             "White", "Black", "Asian", "UnemploymentRate", "Med_Household_Income", "LessHS", 
+                                             "HSGrad", "Bachelors", "GradProfDegree"), 
                                  selected = "Percent_Democrat"),
                      
                      # Select variable for y-axis 
                      
                      selectInput(inputId = "y", 
                                  label = "y-axis (specify your y variable):",
-                                 choices = c("Percent_Democrat", "Percent_Republican", "Never", "Rarely", "Sometimes", "Frequently", "Always"), 
+                                 choices = c("Percent_Democrat", "Percent_Republican", "Never", "Rarely", "Sometimes", "Frequently", "Always",
+                                             "White", "Black", "Asian", "UnemploymentRate", "Med_Household_Income", "LessHS", 
+                                             "HSGrad", "Bachelors", "GradProfDegree"), 
                                  selected = "Percent_Democrat"),
                      plotOutput(outputId = "scatterplot"),
                      
@@ -134,19 +155,39 @@ ui <- dashboardPage(
 # Define server function required to create the map
 server <- function(input, output, session) {
 
-    pal <- colorFactor(c("green", "orange", "red"), domain = ShinyAppDS$Percent_Democrat)
+    pal <- colorFactor(c("blue", "orange", "red"), domain = ShinyAppDS$Majority)
     
     #create the map
     output$mymap <- renderLeaflet({
+        
+        if (input$Majority == "All"){
+            ShinyAppDS <- ShinyAppDS
+        }
+        else if(input$Majority != "All"){
+            ShinyAppDS <- ShinyAppDS %>% filter(Majority == input$Majority)
+        }
 
         leaflet(ShinyAppDS) %>% 
-            setView(lng = -99, lat = 45, zoom = 3)  %>%  #setting the view over ~ center of North America
+            setView(lng = -99, lat = 45, zoom = 3)  %>%  # Setting the view over center of North America
             addTiles() %>% 
-            addCircles(data = ShinyAppDS, popup = (paste("Percent Democrat:", sep = " ", ShinyAppDS$Percent_Democrat, "<br>", 
-                                                         "Percent Republican:", 
-                                                         ShinyAppDS$Percent_Republican)),
-                       label = ~as.character(paste0("County:", sep = " ", ShinyAppDS$county_name)), radius = 35000, 
+            addCircles(data = ShinyAppDS, popup = (paste("Proportion Democrat:", sep = " ", ShinyAppDS$Percent_Democrat, "<br>", 
+                                                         "Proportion Republican:", 
+                                                         ShinyAppDS$Percent_Republican, "<br>", 
+                                                         "Proportion Never or Rarely Masking:", ShinyAppDS$Never_Rarely, "<br>",
+                                                         "Proportion Frequently or Always Masking:", ShinyAppDS$Frequently_Always)),
+                       label = ~as.character(paste0("County:", sep = " ", ShinyAppDS$county_name)), radius = 35000, color = ~pal(ShinyAppDS$Majority),
                        fillOpacity = 0.7, stroke = FALSE)
+    })
+    
+    # Add Legend  
+    observe ({
+        proxy <- leafletProxy("mymap", data = ShinyAppDS)
+        proxy %>% clearControls()
+        if (is.null(input$lengend)){
+            proxy %>% addLegend(position = "bottomleft", pal = pal, values = ShinyAppDS$majority,
+                                title = "Political Party",
+                                opacity = 1)
+        }
     })
     
     # Create scatterplot object the plotOutput function is expecting 
@@ -171,7 +212,18 @@ server <- function(input, output, session) {
                                                                      "Rarely",
                                                                      "Sometimes",
                                                                      "Frequently",
-                                                                     "Always"))
+                                                                     "Always",
+                                                                     "White",
+                                                                     "Black",
+                                                                     "Asian",
+                                                                     "Unemployment Rate",
+                                                                     "Median Household Income",
+                                                                     "LessHS",
+                                                                     "HSGrad",
+                                                                     "Bachelors",
+                                                                     "GradProfDegree"))
+                                         
+                                          
     )
     
     output$codebook <- function() {

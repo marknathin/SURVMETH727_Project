@@ -123,14 +123,14 @@ HSGrad = HSGrad/TotOver25,
 SomeCollege = SomeCollege/TotOver25,
 Bachelors = Bachelors/TotOver25,
 GradProfDegree = GradProfDegree/TotOver25) %>%
-  select(GEOID, NAME, HSGrad, SomeCollege, Bachelors, GradProfDegree)
+  select(GEOID, NAME, LessHS, HSGrad, SomeCollege, Bachelors, GradProfDegree)
 ```
 
 ```{r}
 Join1 <- inner_join(RaceCleaned, EmploymentIncomeCleaned, by = "NAME")
 Join2 <- inner_join(Join1, EducationCleaned, by = "NAME")
 Join2 <- Join2 %>%
-  select(-GEOID.y) %>%
+  select(-GEOID.y-GEOID) %>%
   rename(COUNTYFP = "GEOID.x")
 ```
 
@@ -154,6 +154,9 @@ Combined2 <- inner_join(Combined, uscounties, by = "COUNTYFP")
 ```
 
 ```{r}
+```
+
+```{r}
 CombinedClean <- Combined2 %>%
     select(state_name.x, COUNTYFP, county_name, per_gop, per_dem, per_point_diff, NEVER, RARELY, SOMETIMES, 
            FREQUENTLY, ALWAYS, lat, lng, population) %>%
@@ -173,31 +176,39 @@ CombinedClean <- Combined2 %>%
 CombinedClean$Percent_Democrat <- round(CombinedClean$Percent_Democrat, digits = 2)
 CombinedClean$Percent_Republican <- round(CombinedClean$Percent_Republican, digits = 2)
 CombinedClean$Difference <- round(CombinedClean$Difference, digits = 2)
-```
 
-```{r}
 CombinedClean <- left_join(CombinedClean, Join2, by = "COUNTYFP")
-```
 
+CombinedClean$White <- round(CombinedClean$White, digits = 2)
+CombinedClean$Black <- round(CombinedClean$Black, digits = 2)
+CombinedClean$Asian <- round(CombinedClean$Asian, digits = 2)
+CombinedClean$LessHS <- round(CombinedClean$LessHS, digits = 2)
+CombinedClean$HSGrad <- round(CombinedClean$HSGrad, digits = 2)
+CombinedClean$UnemploymentRate <- round(CombinedClean$UnemploymentRate, digits = 4)
+CombinedClean$SomeCollege <- round(CombinedClean$SomeCollege, digits = 2)
+CombinedClean$Bachelors <- round(CombinedClean$Bachelors, digits = 2)
+CombinedClean$GradProfDegree <- round(CombinedClean$GradProfDegree, digits = 2)
 
---> ROUND TO TWO DIGITS 
-```{r}
-#CombinedClean$Percent_Democrat <- round(CombinedClean$Percent_Democrat, digits = 2)
-#CombinedClean$Percent_Republican <- round(CombinedClean$Percent_Republican, digits = 2)
-#CombinedClean$Difference <- round(CombinedClean$Difference, digits = 2)
+CombinedCleanApp <- subset(CombinedClean, select = -c(19, 22, 24, 25, 28, 29, 32))
+write_csv(CombinedCleanApp, "CombinedCleanApp.csv")
 ```
 
 
 ```{r}
 ShinyAppDS <- CombinedClean %>% 
   select(State, county_name, lat, lng, Percent_Republican, Percent_Democrat, Difference, Never, Rarely, 
-         Sometimes, Frequently, Always, Never_Rarely, Frequently_Always, Majority)
-numcounties <- 700
+         Sometimes, Frequently, Always, Never_Rarely, Frequently_Always, Majority, White, Black,
+         UnemploymentRate, Med_Household_Income, LessHS, HSGrad, Bachelors, GradProfDegree)
+
+numcounties <- 1000
 ShinyAppDS <- ShinyAppDS[sample(1:nrow(ShinyAppDS), numcounties, replace=FALSE),] # Select a random sample of 700 counties
 ShinyAppDS
 
 write_csv(ShinyAppDS, "ShinyAppDS.csv")
 ```
+
+
+
 
 ## Preliminary Analysis
 
