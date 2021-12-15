@@ -1,6 +1,6 @@
 # SURVMETH727
 
-Mark Nathin and Anqi Liu
+Authors: Mark Nathin and Anqi Liu
 
 This project examined the relationship between COVID-19 mask-wearing tendencies across United States counties and 2020 Presidential Election votes. The term paper for this project is labeled termpaper.rmd and termpaper.pdf. 
 
