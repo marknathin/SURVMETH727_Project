@@ -1,7 +1,7 @@
 ---
-title: "Fundamentals of Computing and Data Display"
-subtitle: "Term paper template"
-author: "Author"
+title: "Linkage between COVID-19 Mask Wearing and 2020 Presidential Election Votes"
+subtitle: "Term Paper"
+author: "Mark Nathin & Anqi Liu"
 date: "`r Sys.Date()`"
 output:
   pdf_document:
@@ -42,9 +42,8 @@ library(tidyverse)
 
 ## Introduction
 
-This section outlines the research idea. We can also cite related work here [@Wickham2014; @Baumer2017].
 
-Note that compiled term paper (the PDF) is supposed to be more text-centered than the RMarkdown documents we used in class, i.e. the text sections are more detailed and big or redundant code chunks can be hidden.
+
 
 ## Data
 
