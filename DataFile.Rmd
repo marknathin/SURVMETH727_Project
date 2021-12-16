@@ -32,7 +32,7 @@ library(readxl)
 First we will read-in the NY Times Mask-Usage data from July 2020. 
 
 ```{r}
-mask_use_by_county <- read_csv("~/Desktop/mask-use-by-county.csv")
+mask_use_by_county <- read_csv("~/git/SURVMETH727/mask-use-by-county.csv")
 mask_use <- mask_use_by_county
 head(mask_use)
 ```
@@ -129,9 +129,7 @@ GradProfDegree = GradProfDegree/TotOver25) %>%
 ```{r}
 Join1 <- inner_join(RaceCleaned, EmploymentIncomeCleaned, by = "NAME")
 Join2 <- inner_join(Join1, EducationCleaned, by = "NAME")
-Join2 <- Join2 %>%
-  select(-GEOID.y-GEOID) %>%
-  rename(COUNTYFP = "GEOID.x")
+Join2 <- Join2 %>% select(-GEOID.y-GEOID) %>% rename(COUNTYFP = "GEOID.x")
 ```
 
 
@@ -151,9 +149,6 @@ uscounties <- read_csv("~/Downloads/simplemaps_uscounties_basicv1.71/uscounties.
 uscounties <- uscounties %>%
   rename(COUNTYFP = county_fips)
 Combined2 <- inner_join(Combined, uscounties, by = "COUNTYFP")
-```
-
-```{r}
 ```
 
 ```{r}
@@ -188,9 +183,6 @@ CombinedClean$UnemploymentRate <- round(CombinedClean$UnemploymentRate, digits =
 CombinedClean$SomeCollege <- round(CombinedClean$SomeCollege, digits = 2)
 CombinedClean$Bachelors <- round(CombinedClean$Bachelors, digits = 2)
 CombinedClean$GradProfDegree <- round(CombinedClean$GradProfDegree, digits = 2)
-
-CombinedCleanApp <- subset(CombinedClean, select = -c(19, 22, 24, 25, 28, 29, 32))
-write_csv(CombinedCleanApp, "CombinedCleanApp.csv")
 ```
 
 
@@ -201,10 +193,12 @@ ShinyAppDS <- CombinedClean %>%
          UnemploymentRate, Med_Household_Income, LessHS, HSGrad, Bachelors, GradProfDegree)
 
 numcounties <- 1000
-ShinyAppDS <- ShinyAppDS[sample(1:nrow(ShinyAppDS), numcounties, replace=FALSE),] # Select a random sample of 700 counties
-ShinyAppDS
-
+ShinyAppDS <- ShinyAppDS[sample(1:nrow(ShinyAppDS), numcounties, replace=FALSE),] 
+# Select a random sample of 1000 counties
 write_csv(ShinyAppDS, "ShinyAppDS.csv")
+
+CombinedCleanApp <- subset(CombinedClean, select = -c(19, 22, 24, 25, 28, 29, 32))
+write_csv(CombinedCleanApp, "CombinedCleanApp.csv")
 ```
 
 
