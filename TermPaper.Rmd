@@ -7,19 +7,6 @@ output:
   pdf_document:
     toc: yes
     df_print: kable
-references:
-- id: McGovern2020
-  title: County Level Election Results
-  author:
-  - family: McGovern
-    given: Tony
-  container-title:
-  volume:
-  issue:
-  page: 
-  type: 
-  issued:
-    year: 2020
 ---
 
 ```{r, include = FALSE}
@@ -31,11 +18,6 @@ library(readxl)
 library(tidycensus)
 ```
 
-## Abstract
-In this project, we examined the linkage between the COVID-19 mask wearing willingness and 2020 presidential election votes outcomes. By applying the county-level data from the American Community Survey (ACS), New York Times mask-wearing survey, 2020 presidential election votes, the county locations and state-level Google Trends data, we found that, unexpectedly, mask-wearing behavior seemed someway random and the introduced census variables were much more useful for predicting 2020 presidential election votes outcomes than predicting mask wearing behaviors. We examined the linkage by checking the correlations and the linear regression results. Finally, we provided corresponding visualizations showing the relations among these variables by shiny app. Future research could try to introduce the google trends data or other kinds of social media data into the prediction model to find if it could help improve the predicting accuracy. 
-
-## Introduction
-
 A GitHub repository where all code is hosted for this project is located at the following link:
 
 https://github.com/marknathin/SURVMETH727_Project
@@ -44,19 +26,20 @@ The Shiny Application for this project is hosted on ShinyApps.io at the followin
 
 https://marknathin.shinyapps.io/SURVMETH727/
 
-Since the end of 2019 till today, the world has been an area of the infectious disease, COVID-19. The outbreak of COVID pandemic has not only changed our lifestyle, but it has also immersed us everywhere in our life including political life. Because we are now in the middle of the epidemic right now, data related to the disease are reliable and accessible nowadays. The World Health Organization (WHO) declared COVID-19 as being a worldwide pandemic [@CDC2020]. Moreover, the CDC reported that for the cases in the USA, total cases came to over 50 million with deaths totaling over 797 thousand as of December 15, 2021. Facing the severe spreading of COVID-19, health officials encouraged all people to wear facemasks in public and within six feet of another person to reduce the spread of the virus. But there was a group of people standing opposite to the facemask wearing. These people were found to be allies with the former US President Donald Trump who ignored the CDC’s urging of wearing facemasks. The great debate between Trump and Biden on this issue made the facemask wearing issue political as well.
-
-It has been already recognized that the COVID pandemic is highly politicized in the US. However, to what extent is the case truly true? Considering the behaviors of the president can lay a great influence on the people who support him, this project is interested in the linkage between county-level mask-wearing behaviors and the 2020 presidential election votes outcomes. We are curious about how strong the relationship between reported mask usage frequently and 2020 Presidential election votes is. In addition, we introduce the demographic characteristics data, from American Community Survey (ACS) to the study, aiming to find if it can help us know more about the linkage. Therefore, we mainly develop these two research questions:
-i.           	How well can one predict the other?
-ii.          	How well can other variables from Census API improve these prediction models?
-
-To have a basic understanding about how people were concerned about the facemask wearing, we looked for help from Google Trends, a website which could analyze the popularity of search queries and use graphs to compare these search queries. Although google trends could only provide state-level data, it could still help us develop a fundamental understanding. We searched some related keywords, election and mask wearing,  in google trends and developed the corresponding graph. It looked like there was a certain consistency in the trends of the two curves, which showed that it was worthy to go deeper into figuring out the linkage between the mask wearing behaviors and the election votes.
-
-The remainder of this paper is organized as follows. The next section provides the empirical model employed and a description of the data used to test it. Section three contains the data analysis results. Section four follows with the discussion of the study, including some concluding thoughts and limitations of this study.
+## Abstract
+In this project, we examined the linkage between the COVID-19 mask wearing willingness and 2020 US Presidential election votes. By applying county-level data from the American Community Survey (ACS), New York Times mask-wearing survey, 2020 presidential election votes, and Google Trends data, we found that mask-wearing tendencies are more closely related to political party election votes than traditional demographic variables such as race, level of education, and median household income. In fact, these traditional demographic variables had surprisingly small correlations with mask wearing willingness. We examined the linkage between these variables via correlational analyses and linear regression modeling. Finally, we provided corresponding visualizations showing the relations among these variables via a Shiny Application. Future research could try to introduce the google trends data or other kinds of social media data into the prediction model to systematically determine whether this information is related to mask wearing or voting behavior. 
 
 ## Introduction
 
+Since the end of 2019 till today, the world has been in a seemingly never ending battle with the infectious disease COVID-19. The outbreak of COVID pandemic has not only changed our lifestyle, but it has also immersed us everywhere in our life including political life. Because we are now in the middle of the epidemic right now, data related to the disease are reliable and accessible nowadays. The World Health Organization (WHO) declared COVID-19 as being a worldwide pandemic in March 2020. Moreover, the CDC reported that, in the USA, total cases have surpassed 50 million with deaths totaling over 797 thousand as of December 15, 2021. Facing the severe spreading of COVID-19, health officials encouraged all people to wear facemasks in public and within six feet of another person to reduce the spread of the virus. Over time, the virus became politicized with former US President Donald Trump and many of his supporters ignoring the CDC’s recommendation of wearing facemasks in public.
 
+It has been already recognized that the COVID pandemic is highly politicized in the US. However, to what extent is the case truly true? Considering the behaviors of the president can lay a great influence on the people who support him, this project is interested in the linkage between county-level mask-wearing behaviors and the 2020 presidential election votes outcomes. We are curious about how strong the relationship between reported mask usage frequently and 2020 Presidential election votes is. In addition, we introduce additional demographic variables from the American Community Survey (ACS) to provide additional context regarding the strength of this relationship. We had two primary research questions: 
+i.           	How well can mask-wearing tendencies in counties predict 2020 Presidential election party support? 
+ii.          	How much can other variables from the Census API improve these prediction models?
+
+The remainder of this paper is organized as follows. The next section provides the empirical model employed and a description of the data used to test it. Section three contains the data analysis results. Section four follows with the discussion of the study, including some concluding thoughts and limitations of this study.
+
+![Wearing a mask to protect against COVID-19 has been highly politicized in the US due in part due to the conflicting messages between Joe Biden and Donald Trump"](PoliticalMasking.png)
 
 ## Data
 
@@ -401,13 +384,27 @@ summary(Mult2)
 
 We see that the R-squared is 63.11% which is only 1% less than the R-squared of the previous model predicting `Percent_Democrat`. This is all another huge improvement from the simple linear regression model that had an R-squared of 23.85%. 
 
+## Google Trends
+
+![Google Trends Results for "covid mask"](Masking.png)
+
+To have a basic understanding about how people were concerned about the facemask wearing, we looked for help from Google Trends, a website which could analyze the popularity of search queries and use graphs to compare these search queries. Although google trends could only provide state-level data, it could still help us develop a fundamental understanding of this relationship. We searched some related keywords, election and mask wearing, in google trends and developed the corresponding graph. It looked like there was a certain consistency in the trends of the two curves, which showed that it was worthy to go deeper into figuring out the linkage between the mask wearing behaviors and the election votes.
+
+```{r}
+library(gtrendsR)
+covid <- gtrends(c("COVID-19 Biden", "COVID-19 Trump"), geo = "US", 
+                 time = "2020-05-31 2020-07-31", low_search_volume = T)
+plot(covid)
+```
+
+
 ## Discussion
 
 COVID-19 pandemic has already been politicized in the US. Whether or not to wear a mask has become a way of expressing political preference. To find out how much it is politicized indeed, we check the linkage between the facemask-wearing behaviors and the 2020 presidential election votes by joining different kinds of data including survey data, API data, election votes data and county location data.
 
 We check the google trends data of related keywords, election and mask wearing, to develop a basic understanding of the tendency of the search queries. Google trends can only provide state-level data, therefore, we are not able to introduce it into the prediction model. But it is still informative. It can be told from the graph that there is consistency between the search queries of these two keywords and we are suggested to go deeper into statistical analysis, which can provide a more precise outcome.
 
-By evaluating the linkage between mask-wearing willingness and the election votes through data analysis, we find that census variables were much more useful for predicting 2020 election party support than predicting mask-wearing behaviors. It indicates that mask-wearing behavior seems more random or unpredictable, compared to presidential election votes. Moreover, we also find that election party support has a stronger relationship with mask-wearing behavior than any of our other variables. We also provide visualizations showing the linkage by using shiny app.
+By evaluating the linkage between mask-wearing willingness and the election votes through data analysis, we find that census variables were much more useful for predicting 2020 election party support than predicting mask-wearing behaviors. It indicates that mask-wearing behavior seems more random or unpredictable, compared to presidential election votes. Moreover, we also find that election party support has a stronger relationship with mask-wearing behavior than any of our other variables. We also provide visualizations showing these relationships via a Shiny Application. 
 
 There are mainly three limitations of this study. For one, COVID-19 pandemic is changing fast and is an ongoing event. We only pick the data from one single point of time to fit in the prediction models and the accuracy of these models may be compromised due to the lack of enough data. Besides, there are still other variables such as mask mandates of different locations influencing the mask-wearing behaviors. Lastly, we try to introduce the google trends data into the study effectively, which can also show people’s awareness of wearing masks. But due to the different data types, we qre unable to include state-level google trends data into county-level prediction models.
 
@@ -421,10 +418,14 @@ Limitation: Data collected at a single point in time but the pandemic was a rapi
 
 ## References
 
-https://www.ers.usda.gov/data-products/county-level-data-sets/download-data
 
-Mask-wearing data: https://github.com/nytimes/covid-19-data/tree/master/mask-use
+“Coronavirus Disease 2019 (COVID-19): Cases in the U.S.” Centers for Disease Control and Prevention. https://www.cdc.gov/coronavirus/2019- ncov/cases-updates/cases-in-us.html, updated on December 15, 2021.
 
-Election data: https://github.com/tonmcg/US_County_Level_Election_Results_08-20/blob/master/2020_US_County_Level_Presidential_Results.csv
+Economic Research Data (2021). https://www.ers.usda.gov/data-products/county-level-data-sets/download-data
 
+Kahane, L.H. (2021). Politicizing the Mask: Political, Economic and Demographic Factors Affecting Mask Wearing Behavior in the USA. Eastern Econ J 47, 163–183. https://doi.org/10.1057/s41302-020-00186-0
+
+Mask-Use Data (2020). New York Times. https://github.com/nytimes/covid-19-data/tree/master/mask-use
+
+Tony, McGovern (2020). County Level Election Results. Accessed December 11, 2021 from https://github.com/nytimes/covid-19-data/tree/master/mask-use
 
