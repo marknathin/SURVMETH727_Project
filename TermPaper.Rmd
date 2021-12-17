@@ -41,6 +41,34 @@ The remainder of this paper is organized as follows. The next section provides t
 
 ![Wearing a mask to protect against COVID-19 has been highly politicized in the US due in part due to the conflicting messages between Joe Biden and Donald Trump"](PoliticalMasking.png)
 
+## Google Trends 
+
+To determine whether different regions of the US had different attitudes about wearing a mask to protect against COVID-19, we used Google Trends and the Google Trends API. Google trends can analyze the popularity of search queries and report state level interest in given search terms. The following two plots show search interest over time for the keywords "COVID mask" and "COVID-19 Mask" respectively between May of 2020 and December 2020. 
+
+```{r}
+library(gtrendsR)
+covid <- gtrends(c("COVID Mask"), geo = "US", 
+                 time = "2020-05-31 2020-12-31", low_search_volume = T)
+plot(covid)
+```
+
+```{r}
+library(gtrendsR)
+covid2 <- gtrends(c("COVID-19 Mask"), geo = "US", 
+                 time = "2020-05-31 2020-12-31", low_search_volume = T)
+plot(covid2)
+```
+
+We can see that search interest in both of these terms was very high in July of 2020 which happened to be when the mask wearing survey data from the NY Times was collected.
+
+The google trends website provides a breakdown of various search terms by subregion which includes states in the US. Figure 2 displays these results for the "COVID Mask" search term as an example. 
+
+![Google Trends Results for "covid mask"](Masking.png)
+
+Although the shades of blue are slightly hard to distinguish from one another, we can see that the northeast and west coast parts of the country have stronger search interest in this term compared to much of the south and midwest. This is often how the US political landscape looks with the northeast and western parts of the country showing strong support for left-leaning Democratic politicians and much of the south and midwest showing stronger support for right-leaning Republican candidates. We can see on the right that many states near the bottom of the search interest for "covid mask" such as Alabama, South Carolina, and Mississippi all showed very strong support for former President Donald Trump. 
+
+These results are very interesting and helped motivate us to go deeper into figuring out the linkage between the mask wearing behavior and election votes.
+
 ## Data
 
 Several data sources were used and combined together in order to complete this project. First, we extracted mask-wearing data from the NY Times public github repository. This was data from a survey conducted in July of 2020, around the end of the first major wave of the pandemic. The survey asked the following question: “How often do you wear a mask in public when you expect to be within six feet of another person?” The response options included Never, Rarely, Sometimes, Often, and Always. The data was compiled at the county level and includes estimated proportions of people responding to each option in each county. This data was downloaded from the NY Times Github and read in as a CSV file below. 
@@ -267,34 +295,38 @@ On the other end of the spectrum, we can see that Millard County in Utah, Wright
 We can also look at some basic scatterplots to evaluate the overall relationship between mask-wearing, voting behavior
 
 ```{r}
-ggplot(data = CombinedClean) + aes(x = Always, y = Percent_Democrat) + geom_point() + geom_smooth(method = "lm") 
-ggplot(data = CombinedClean) + aes(x = Always, y = Percent_Republican) + geom_point() + geom_smooth(method = "lm")
+ggplot(data = CombinedClean) + aes(x = Always, y = Percent_Democrat) + geom_point() + 
+  geom_smooth(method = "lm") 
+ggplot(data = CombinedClean) + aes(x = Always, y = Percent_Republican) + geom_point() + 
+  geom_smooth(method = "lm")
 ```
 
 We can see that there is a very noticeable positive correlation between always wearing a mask in public and the percent of democrat votes. We see the reverse and a noticetable negative relationship between always wearing a mask in public and the percent of republican votes. 
 
 ```{r}
-ggplot(data = CombinedClean) + aes(y = Never, x = Percent_Republican) + geom_point() + geom_smooth(method = "lm")
+ggplot(data = CombinedClean) + aes(y = Never, x = Percent_Republican) + geom_point() + 
+  geom_smooth(method = "lm")
 ```
 
 We see that there is indeed a positive relationship between Never wearing a mask in public and the percentage of Republican votes. Now we will briefly assess how some of the census variables fit into this relationship between mask-wearing and voting behavior. 
 
 ```{r}
-ggplot(data = CombinedClean) + aes(y = Always, x = Med_Household_Income) + geom_point() + geom_smooth(method = "lm") + facet_wrap(~ Majority)
+ggplot(data = CombinedClean) + aes(y = Always, x = Med_Household_Income) + geom_point() + 
+  geom_smooth(method = "lm") + facet_wrap(~ Majority)
 ```
 
 Their looks to be a slight positive relationship between median household income and "Always" wearing a mask, irrespective of whether a county voted for Trump or Biden. In other words, higher median household income appears to indicate slightly more mask wearing. 
 
 ```{r}
-ggplot(data = CombinedClean) + aes(y = Always, x = Bachelors) + geom_point() + geom_smooth(method = "lm") +
-  facet_wrap(~ Majority)
+ggplot(data = CombinedClean) + aes(y = Always, x = Bachelors) + geom_point() + 
+  geom_smooth(method = "lm") + facet_wrap(~ Majority)
 ```
 
 For Democratic voting counties, there is a positive relationship between the proportion of people having a bachelors degree and always wearing a mask. Interestingly, their looks to be almost no association between these variables for Republican voting counties. 
 
 ```{r}
-ggplot(data = CombinedClean) + aes(y = Always, x = White) + geom_point() + geom_smooth(method = "lm") + 
-  facet_wrap(~ Majority)
+ggplot(data = CombinedClean) + aes(y = Always, x = White) + geom_point() + 
+  geom_smooth(method = "lm") + facet_wrap(~ Majority)
 ```
 
 For Democratic voting counties, there is a slight positive relationship between the proportion of people who are white and always wearing a mask. However, this relationship looks reversed for Republican voting counties in that a higher proportion of white people is associated with less mask wearing. This finding suggests that a counties racial breakdown is not causing differences in mask wearing behavior. Clearly there are other factors at play here but it is interesting to see these differing relationships nonetheless. 
@@ -384,36 +416,17 @@ summary(Mult2)
 
 We see that the R-squared is 63.11% which is only 1% less than the R-squared of the previous model predicting `Percent_Democrat`. This is all another huge improvement from the simple linear regression model that had an R-squared of 23.85%. 
 
-## Google Trends
-
-![Google Trends Results for "covid mask"](Masking.png)
-
-To have a basic understanding about how people were concerned about the facemask wearing, we looked for help from Google Trends, a website which could analyze the popularity of search queries and use graphs to compare these search queries. Although google trends could only provide state-level data, it could still help us develop a fundamental understanding of this relationship. We searched some related keywords, election and mask wearing, in google trends and developed the corresponding graph. It looked like there was a certain consistency in the trends of the two curves, which showed that it was worthy to go deeper into figuring out the linkage between the mask wearing behaviors and the election votes.
-
-```{r}
-library(gtrendsR)
-covid <- gtrends(c("COVID-19 Biden", "COVID-19 Trump"), geo = "US", 
-                 time = "2020-05-31 2020-07-31", low_search_volume = T)
-plot(covid)
-```
-
-
 ## Discussion
 
-COVID-19 pandemic has already been politicized in the US. Whether or not to wear a mask has become a way of expressing political preference. To find out how much it is politicized indeed, we check the linkage between the facemask-wearing behaviors and the 2020 presidential election votes by joining different kinds of data including survey data, API data, election votes data and county location data.
+This project supports the notion that the COVID-19 pandemic has become a strongly political issue in the US and it appears that whether or not to wear a mask has become a way of expressing political preference. To investigate the degree of this politicalization, we analyzed the linkage between facemask-wearing behaviors and 2020 presidential election votes by joining different kinds of data together including survey data, API data, election votes data and county location data.
 
-We check the google trends data of related keywords, election and mask wearing, to develop a basic understanding of the tendency of the search queries. Google trends can only provide state-level data, therefore, we are not able to introduce it into the prediction model. But it is still informative. It can be told from the graph that there is consistency between the search queries of these two keywords and we are suggested to go deeper into statistical analysis, which can provide a more precise outcome.
+We used the Google Trends API to search terms related to mask wearing and assessed search interest throughout the country to develop a basic understanding of how search interest for COVID-19 masks differs throughout the country. Unfortunately, Google trends can only provide state-level data and therefore we were not able to introduce it into our prediction model.
 
-By evaluating the linkage between mask-wearing willingness and the election votes through data analysis, we find that census variables were much more useful for predicting 2020 election party support than predicting mask-wearing behaviors. It indicates that mask-wearing behavior seems more random or unpredictable, compared to presidential election votes. Moreover, we also find that election party support has a stronger relationship with mask-wearing behavior than any of our other variables. We also provide visualizations showing these relationships via a Shiny Application. 
+By evaluating the linkage between mask-wearing willingness and the election votes through data analysis, we found that census variables were much more useful for predicting 2020 election party support than predicting mask-wearing behaviors. It seems that mask-wearing behavior is a more unpredictable phenomenon compared to presidential election votes. Moreover, we also find that election party support has a stronger relationship with mask-wearing behavior than any of our other variables. We also provide visualizations showing these relationships via a Shiny Application that is hosted on ShinyApps.io.  
 
-There are mainly three limitations of this study. For one, COVID-19 pandemic is changing fast and is an ongoing event. We only pick the data from one single point of time to fit in the prediction models and the accuracy of these models may be compromised due to the lack of enough data. Besides, there are still other variables such as mask mandates of different locations influencing the mask-wearing behaviors. Lastly, we try to introduce the google trends data into the study effectively, which can also show people’s awareness of wearing masks. But due to the different data types, we qre unable to include state-level google trends data into county-level prediction models.
+There are several limitations of this project. For one, COVID-19 pandemic is changing fast and is an ongoing event. We only used data from a single point in time to fit in the prediction models and things may have changed since the data were collected. Secondly, there are still other variables such as mask mandates of different locations that likely strongly influence mask-wearing behaviors. In July 2020 some states had mask mandates in place which could have increased the number of people who reported that they frequently wear a mask compared to if a mandate was not in place. Lastly, we try to introduce the google trends data into the project to see how search interest may be tied in with mask-wearing tendencies. However, we were unable to include state-level google trends data into county-level prediction models.
 
-Future research could extend this work in several ways. First, future studies may benefit from obtaining data from a long-term perspective, which fits the ongoing pandemic. Second, researchers can include more variables into the prediction models to make the prediction outcomes more accurate, such as different mask mandates of different states. Researchers can also try some different statistics modeling to figure out a better prediction model. Third, as the internet is shaping our daily life and it can reflect people’s ideas in some way, it can be a good idea for future studies involving more web data into the prediction model, which may provide some inspirations to related studies hopefully.
-
-
-
-
-Limitation: Data collected at a single point in time but the pandemic was a rapidly changing and shifting event. Mask-mandates could impact mask-wearing survey results. 
+Future research could extend this work in several ways. First, future studies may benefit from obtaining data from a long-term perspective, which fits the ongoing pandemic. Second, researchers can include more variables into the prediction models to make the prediction outcomes more accurate, such as accounting for mask mandates in different states. Third, as the internet is shaping our daily life and it can reflect people’s ideas in some way, future research could incorporate more web data into the prediction model such as data from Facebook or Twitter and social media could also be a way to assess sentiment surrounding mask-wearing. 
 
 
 ## References
